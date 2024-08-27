@@ -1,0 +1,33 @@
+on:
+  pull_request:
+    branches:
+      - dev
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Cocos WebGL project
+        run: npm run build:webgl
+
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: cocos-webgl-build
+          path: build/webgl
+
+      - name: Deploy to main branch
+        uses: actions/checkout@v2
+        with:
+          ref: main
+        run: |
+          mkdir -p build/webgl
+          cp -r ${GITHUB_WORKSPACE}/build/webgl/* build/webgl/
+          git add .
+          git commit -m "Deploy Cocos WebGL build"
+          git push origin main
